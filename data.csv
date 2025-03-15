@@ -1,0 +1,4 @@
+name,email,amount,date
+John Doe,john@example.com,150.50,2023-05-10
+Jane Doe,invalid-email,200.75,2024-02-30
+Bob Smith,bob.smith@example.com,-50.00,2022-11-15

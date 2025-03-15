@@ -1,0 +1,7 @@
+{
+  "0": {"type": "int", "target":"id"}, 
+  "1": {"type": "required", "target":"client_name"}, 
+  "2": {"type": "required", "target":"client_address"}, 
+  "3": {"type": "email", "target":"email"}, 
+  "4": {"type": "required", "target":"agence_code"} 
+}
