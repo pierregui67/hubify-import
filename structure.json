@@ -1,7 +1,7 @@
 {
-  "0": {"type": "int", "target":"id"}, 
-  "1": {"type": "required", "target":"client_name"}, 
+  "0": { "type": "int", "target": "ID" },
+  "1": {"type": "required", "target":"client_name", "transformations": [{"action": "substring", "start": 1, "size": 2}]}, 
   "2": {"type": "required", "target":"client_address"}, 
   "3": {"type": "email", "target":"email"}, 
-  "4": {"type": "required", "target":"agence_code"} 
+  "4": {"type": "equals", "target":"gender_code", "transformations": [{"action": "convert", "map":{"male": "M", "Female": "F"}, "casse": false, "default": "O"}], "equalValues": ["M","F","O"]}
 }

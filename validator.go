@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"strconv"
+	"strings"
 )
 
 var validate = validator.New()
 
-// ValidateField checks a value against an expected type and returns explicit error messages.
-func ValidateField(value string, expectedType string) error {
+func ValidateField(value string, expectedType string, expectedValues []string) error {
+
 	if value == "" {
 		return fmt.Errorf("expected type '%s' but received an empty value", expectedType)
 	}
@@ -35,6 +36,14 @@ func ValidateField(value string, expectedType string) error {
 		if err := validate.Var(value, "number"); err != nil {
 			return fmt.Errorf("expected an integer but got '%s'", value)
 		}
+	case "equals":
+		if len(expectedValues) > 0 {
+			validatorParam := "eq=" + strings.Join(expectedValues, "|eq=")
+			if err := validate.Var(value, validatorParam); err != nil {
+				return fmt.Errorf("value '%s' does not match allowed options: %s", value, "M")
+			}
+		}
+		
 	default:
 		return fmt.Errorf("unsupported validation type: '%s'", expectedType)
 	}

@@ -11,7 +11,7 @@ func main() {
 		fmt.Println("Error loading structure:", err)
 		return
 	}
-
+	
 	// Valider le fichier CSV avec la structure définie
 	ValidateCsv("bigdata.csv", structure)
 }

@@ -45,7 +45,7 @@ func ValidateLine(line []string, structure StructureDefinition, lineNumber int, 
 		}
 
 		value := line[i]
-		if err := ValidateField(value, fieldDef.Type ); err != nil {
+		if err := ValidateField(value, fieldDef.Type, fieldDef.ExpectedValues ); err != nil {
 			errorsMap[i] = append(errorsMap[i], fmt.Sprintf("Erreur ligne %d: %v", lineNumber, err))
 		}
 	}
@@ -86,6 +86,8 @@ func ValidateCsv(filePath string, structure StructureDefinition) {
 			lineNumber++
 			continue
 		}
+
+		TransformRecord(record, structure)
 
 		wg.Add(1)
 		go ValidateLine(record, structure, lineNumber, errorsMap, &wg)
@@ -149,4 +151,18 @@ func saveTransformedCsv(originalFile string, oldHeader []string, rows [][]string
 
 	elapsedTime := time.Since(startTime)
 	fmt.Printf("✅ CSV transformed and saved as %s in %s ms", newFileName, elapsedTime)
+}
+
+func TransformRecord(record []string, structure StructureDefinition) {
+
+	for index, fieldDef := range structure {
+		i, err := strconv.Atoi(index)
+		if err != nil || i >= len(record) {
+			continue
+		}
+
+		for _, transformation := range fieldDef.Transformations {
+			record[i] = transformation.Apply(record[i])
+		}
+	}
 }
