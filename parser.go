@@ -35,8 +35,7 @@ func DetectDelimiter(filePath string) (rune, error) {
 	return ',', nil
 }
 
-func ValidateLine(line []string, structure StructureDefinition, lineNumber int, errorsMap map[int][]string, wg *sync.WaitGroup) {
-	defer wg.Done() 
+func ValidateLine(line []string, structure StructureDefinition, lineNumber int, errorsMap map[int][]string) {
 	
 	for index, fieldDef := range structure {
 		i, err := strconv.Atoi(index)
@@ -87,10 +86,9 @@ func ValidateCsv(filePath string, structure StructureDefinition) {
 			continue
 		}
 
-		TransformRecord(record, structure)
-
 		wg.Add(1)
-		go ValidateLine(record, structure, lineNumber, errorsMap, &wg)
+		TransformAndValidateLine(record, structure, lineNumber, errorsMap, &wg)
+		
 		rows = append(rows, record)
 		lineNumber++
 	}
@@ -165,4 +163,10 @@ func TransformRecord(record []string, structure StructureDefinition) {
 			record[i] = transformation.Apply(record[i])
 		}
 	}
+}
+
+func TransformAndValidateLine(record []string, structure StructureDefinition, lineNumber int, errorsMap map[int][]string, wg *sync.WaitGroup) {
+	defer wg.Done() 
+	TransformRecord(record, structure)
+	ValidateLine(record, structure, lineNumber, errorsMap)
 }
