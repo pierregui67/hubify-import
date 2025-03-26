@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"encoding/csv"
 	"fmt"
 	"os"
 	"strconv"
@@ -50,18 +49,18 @@ func ValidateLine(line []string, structure StructureDefinition, lineNumber int, 
 	}
 }
 
-func ValidateCsv(filePath string, structure StructureDefinition) {
+func ValidateCsv(filePath string, structure StructureDefinition) ([][]string, error) {
 	startTime := time.Now()
 	delimiter, err := DetectDelimiter(filePath)
 	if err != nil {
 		fmt.Println("Erreur de détection du délimiteur:", err)
-		return
+		return nil, err
 	}
 
 	file, err := os.Open(filePath)
 	if err != nil {
 		fmt.Println("Erreur d'ouverture du fichier:", err)
-		return
+		return nil, err
 	}
 	defer file.Close()
 
@@ -70,7 +69,6 @@ func ValidateCsv(filePath string, structure StructureDefinition) {
 	errorsMap := make(map[int][]string)
 
 	var wg sync.WaitGroup
-	var originalHeader []string
 	var rows [][]string
 
 	for scanner.Scan() {
@@ -80,7 +78,6 @@ func ValidateCsv(filePath string, structure StructureDefinition) {
 
 		// header
 		if lineNumber == 1 {
-			originalHeader = record
 			rows = append(rows, record)
 			lineNumber++
 			continue
@@ -98,57 +95,27 @@ func ValidateCsv(filePath string, structure StructureDefinition) {
 	elapsedTime := time.Since(startTime)
 	fmt.Printf("Validation terminée en %s\n", elapsedTime)
 	if len(errorsMap) == 0 {
-		fmt.Println("✅ No errors found! Saving transformed file...")
-		saveTransformedCsv(filePath, originalHeader, rows, structure)
+		fmt.Println("✅ No errors found! Returning transformed data...")
+		return rows, nil
 	} else {
-		printColumnErrors(errorsMap)
+		errorsString := printColumnErrors(errorsMap)
+		return nil, fmt.Errorf("error on file validation : \n" + errorsString)
 	}
 }
 
-func printColumnErrors(errorsMap map[int][]string) {
+func printColumnErrors(errorsMap map[int][]string) (string) {
+	errorsString := "";
 	for columnIndex, columnErrors := range errorsMap {
 		if len(columnErrors) > 0 {
 			fmt.Printf("Colonne %d a %d erreur(s):\n", columnIndex+1, len(columnErrors))
+			errorsString += fmt.Sprintf("Colonne %d a %d erreur(s):\n", columnIndex+1, len(columnErrors))
 			for _, err := range columnErrors {
 				fmt.Println("  -", err)
+				errorsString += "  - " + err + "\n"
 			}
 		}
 	}
-}
-
-func saveTransformedCsv(originalFile string, oldHeader []string, rows [][]string, structure StructureDefinition) {
-	// Generate new file name with timestamp
-	startTime := time.Now()
-
-	timestamp := time.Now().Format("20060102_150405")
-	newFileName := fmt.Sprintf("%s_%s.csv", strings.TrimSuffix(originalFile, ".csv"), timestamp)
-
-	file, err := os.Create(newFileName)
-	if err != nil {
-		fmt.Println("Error creating new file:", err)
-		return
-	}
-	defer file.Close()
-
-	writer := csv.NewWriter(file)
-
-	// Replace column headers with "target" values
-	newHeader := make([]string, len(oldHeader))
-	for i, header := range oldHeader {
-		if fieldDef, exists := structure[strconv.Itoa(i)]; exists {
-			newHeader[i] = fieldDef.Target // Use target name
-		} else {
-			newHeader[i] = header // Keep original
-		}
-	}
-
-	// Write new header and rows
-	writer.Write(newHeader)
-	writer.WriteAll(rows[1:]) // Skip old header
-	writer.Flush()
-
-	elapsedTime := time.Since(startTime)
-	fmt.Printf("✅ CSV transformed and saved as %s in %s ms", newFileName, elapsedTime)
+	return errorsString
 }
 
 func TransformRecord(record []string, structure StructureDefinition) {
