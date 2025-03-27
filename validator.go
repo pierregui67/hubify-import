@@ -15,6 +15,10 @@ func ValidateField(value string, expectedType string, expectedValues []string) e
 		return fmt.Errorf("expected type '%s' but received an empty value", expectedType)
 	}
 
+	if(expectedType == "") {
+		return nil
+	}
+
 	switch expectedType {
 	case "email":
 		if err := validate.Var(value, "email"); err != nil {

@@ -41,7 +41,7 @@ func saveTransformedCsv(originalFile string, rows [][]string, structure Structur
 
 	// Write new header and rows
 	writer.Write(newHeader)
-	writer.WriteAll(rows[1:]) // Skip old header
+	writer.WriteAll(rows[1:])
 	writer.Flush()
 
 	elapsedTime := time.Since(startTime)

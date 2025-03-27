@@ -44,7 +44,7 @@ func ValidateLine(line []string, structure StructureDefinition, lineNumber int, 
 
 		value := line[i]
 		if err := ValidateField(value, fieldDef.Type, fieldDef.ExpectedValues ); err != nil {
-			errorsMap[i] = append(errorsMap[i], fmt.Sprintf("Erreur ligne %d: %v", lineNumber, err))
+			errorsMap[i] = append(errorsMap[i], fmt.Sprintf("Erreur ligne %d: %v", lineNumber-1, err))
 		}
 	}
 }
@@ -99,7 +99,7 @@ func ValidateCsv(filePath string, structure StructureDefinition) ([][]string, er
 		return rows, nil
 	} else {
 		errorsString := printColumnErrors(errorsMap)
-		return nil, fmt.Errorf("error on file validation : \n" + errorsString)
+		return nil, fmt.Errorf(errorsString)
 	}
 }
 

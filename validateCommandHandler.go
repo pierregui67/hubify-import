@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -28,27 +27,47 @@ func HandleCSVValidation(w http.ResponseWriter, r *http.Request) {
 	// Valider le CSV et générer le fichier de sortie
 	transformedData, err := ValidateCsv(payload.CSVURL, payload.Structure)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Validation error: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
 		return
 	}
 
 	if payload.Size > 0 {
-		// Lire les premières lignes du fichier de sortie
-		w.Header().Set("Content-Type", "text/csv")
-		w.Header().Set("Content-Disposition", "attachment; filename=validated_data.csv")
-
-		csvWriter := csv.NewWriter(w)
-		defer csvWriter.Flush()
-
+		// Set the response header for JSON format
+		w.Header().Set("Content-Type", "application/json")
+		
+		// Limit the number of records based on payload.Size
 		previewSize := min(len(transformedData), payload.Size+1)
-		for _, record := range transformedData[:previewSize] {
-			if err := csvWriter.Write(record); err != nil {
-				http.Error(w, fmt.Sprintf("Error writing CSV: %v", err), http.StatusInternalServerError)
-				return
+		filteredData := transformedData[:previewSize]
+	
+		// The first row contains the keys (headers)
+		headers := filteredData[0]
+		
+		// Create a slice of maps to hold the transformed data
+		var result []map[string]string
+	
+		// Iterate over the data and construct the result as an array of objects
+		for _, record := range filteredData[1:] { // Skip the header row
+			recordMap := make(map[string]string)
+			for i, value := range record {
+				if i < len(headers) {
+					recordMap[headers[i]] = value
+				}
 			}
+			result = append(result, recordMap)
 		}
+	
+		// Marshal the result into JSON
+		jsonData, err := json.Marshal(result)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error marshaling JSON: %v", err), http.StatusInternalServerError)
+			return
+		}
+	
+		// Write the JSON data to the response
+		w.Write(jsonData)
 		return
-	}
+	}	
+	
 	
 	outputFile, err := saveTransformedCsv(payload.CSVURL, transformedData, payload.Structure)
 	if err != nil {
