@@ -30,10 +30,10 @@ func LoadValidationStructure(filePath string) (StructureDefinition, error) {
 
 func (f *FieldDefinition) UnmarshalJSON(data []byte) error {
 	var raw struct {
-		Type           string          `json:"type"`
-		Target         string          `json:"target"`
+		Type           string            `json:"type"`
+		Target         string            `json:"target"`
 		Transformations []json.RawMessage `json:"transformations,omitempty"`
-		ExpectedValues []string			`json:"equalValues,omitempty"`
+		ExpectedValues []string          `json:"equalValues,omitempty"`
 	}
 
 	if err := json.Unmarshal(data, &raw); err != nil {
@@ -45,7 +45,6 @@ func (f *FieldDefinition) UnmarshalJSON(data []byte) error {
 	f.ExpectedValues = raw.ExpectedValues
 
 	for _, tData := range raw.Transformations {
-		// Detect transformation type
 		var tType struct {
 			Action string `json:"action"`
 		}

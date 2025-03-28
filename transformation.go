@@ -6,7 +6,6 @@ type TransformationAction interface {
 	Apply(value string) string
 }
 
-
 type TrimTransformation struct{}
 
 func (t TrimTransformation) Apply(value string) string {
@@ -14,20 +13,22 @@ func (t TrimTransformation) Apply(value string) string {
 }
 
 type ConvertTransformation struct {
-	Map              map[string]string `json:"map"`
-	IsCaseSensitive  bool              `json:"casse"`
-	Default  		 string            `json:"default"`
+	Param struct {
+		Map             map[string]string `json:"map"`
+		IsCaseSensitive bool              `json:"case"`
+		Default         string            `json:"default"`
+	} `json:"param"`
 }
 
 func (c ConvertTransformation) Apply(value string) string {
 	currentValue := value
-	if !c.IsCaseSensitive {
+	if !c.Param.IsCaseSensitive {
 		currentValue = strings.ToLower(value)
 	}
 
-	for key, newValue := range c.Map {
+	for key, newValue := range c.Param.Map {
 		proposedKey := key
-		if !c.IsCaseSensitive {
+		if !c.Param.IsCaseSensitive {
 			proposedKey = strings.ToLower(key)
 		}
 
@@ -36,24 +37,28 @@ func (c ConvertTransformation) Apply(value string) string {
 		}
 	}
 
-	if c.Default != "" {
-		return c.Default
+	if c.Param.Default != "" {
+		return c.Param.Default
 	}
 	return value
 }
 
+
 type SubstringTransformation struct {
-	Start int `json:"start"`
-	Size  int `json:"size"`
+	Param struct {
+		Start int `json:"start"`
+		Size  int `json:"size"`
+	} `json:"param"`
 }
 
 func (s SubstringTransformation) Apply(value string) string {
-	if s.Start >= len(value) {
+	if s.Param.Start >= len(value) {
 		return ""
 	}
-	end := s.Start + s.Size
+	end := s.Param.Start + s.Param.Size
 	if end > len(value) {
 		end = len(value)
 	}
-	return value[s.Start:end]
+	return value[s.Param.Start:end]
 }
+
