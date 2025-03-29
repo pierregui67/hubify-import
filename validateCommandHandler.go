@@ -27,7 +27,8 @@ func HandleCSVValidation(w http.ResponseWriter, r *http.Request) {
 	// Valider le CSV et générer le fichier de sortie
 	transformedData, err := ValidateCsv(payload.CSVURL, payload.Structure)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
+		limitedErrors := limitErrors(err, 10000)
+		http.Error(w, fmt.Sprintf("%v", limitedErrors), http.StatusInternalServerError)
 		return
 	}
 
@@ -78,6 +79,14 @@ func HandleCSVValidation(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
+
+func limitErrors(err error, max int) error {
+	errStr := err.Error()
+	if len(errStr) > max {
+		return fmt.Errorf("%s...\n(Truncated, too many errors)", errStr[:max])
+	}
+	return err
 }
 
 // ReadFirstLines lit les premières lignes d'un fichier CSV.

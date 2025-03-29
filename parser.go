@@ -103,19 +103,20 @@ func ValidateCsv(filePath string, structure StructureDefinition) ([][]string, er
 	}
 }
 
-func printColumnErrors(errorsMap map[int][]string) (string) {
-	errorsString := "";
+func printColumnErrors(errorsMap map[int][]string) string {
+	var builder strings.Builder
+
 	for columnIndex, columnErrors := range errorsMap {
 		if len(columnErrors) > 0 {
-			fmt.Printf("Colonne %d a %d erreur(s):\n", columnIndex+1, len(columnErrors))
-			errorsString += fmt.Sprintf("Colonne %d a %d erreur(s):\n", columnIndex+1, len(columnErrors))
+			fmt.Fprintf(&builder, "Colonne %d a %d erreur(s):\n", columnIndex+1, len(columnErrors))
 			for _, err := range columnErrors {
-				fmt.Println("  -", err)
-				errorsString += "  - " + err + "\n"
+				builder.WriteString("  - ")
+				builder.WriteString(err)
+				builder.WriteString("\n")
 			}
 		}
 	}
-	return errorsString
+	return builder.String()
 }
 
 func TransformRecord(record []string, structure StructureDefinition) {

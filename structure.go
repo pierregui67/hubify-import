@@ -52,24 +52,9 @@ func (f *FieldDefinition) UnmarshalJSON(data []byte) error {
 			return err
 		}
 
-		var transformation TransformationAction
-		switch tType.Action {
-		case "trim":
-			transformation = TrimTransformation{}
-		case "convert":
-			var convert ConvertTransformation
-			if err := json.Unmarshal(tData, &convert); err != nil {
-				return err
-			}
-			transformation = convert
-		case "substring":
-			var substring SubstringTransformation
-			if err := json.Unmarshal(tData, &substring); err != nil {
-				return err
-			}
-			transformation = substring
-		default:
-			return fmt.Errorf("unknown transformation: %s", tType.Action)
+		transformation, err := doUnmarshal(tType.Action, tData)
+		if err != nil {
+			return err
 		}
 
 		f.Transformations = append(f.Transformations, transformation)
@@ -78,3 +63,27 @@ func (f *FieldDefinition) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func doUnmarshal(action string, data json.RawMessage) (TransformationAction, error) {
+	var transformation TransformationAction
+
+	switch action {
+	case "trim":
+		transformation = TrimTransformation{}
+	case "convert":
+		transformation = &ConvertTransformation{}
+	case "before":
+		transformation = &BeforeTransformation{}
+	case "after":
+		transformation = &AfterTransformation{}
+	case "substring":
+		transformation = &SubstringTransformation{}
+	default:
+		return nil, fmt.Errorf("unknown transformation: %s", action)
+	}
+
+	if err := json.Unmarshal(data, transformation); err != nil {
+		return nil, err
+	}
+
+	return transformation, nil
+}
