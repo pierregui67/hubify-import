@@ -84,9 +84,9 @@ func ValidateCsv(filePath string, structure StructureDefinition) ([][]string, er
 		}
 
 		wg.Add(1)
-		TransformAndValidateLine(record, structure, lineNumber, errorsMap, &wg)
+		transformedRecord := TransformAndValidateLine(record, structure, lineNumber, errorsMap, &wg)
 		
-		rows = append(rows, record)
+		rows = append(rows, transformedRecord)
 		lineNumber++
 	}
 
@@ -119,22 +119,26 @@ func printColumnErrors(errorsMap map[int][]string) string {
 	return builder.String()
 }
 
-func TransformRecord(record []string, structure StructureDefinition) {
-
+func TransformRecord(record []string, structure StructureDefinition) []string {
+	newRecord := make([]string, len(record))
 	for index, fieldDef := range structure {
 		i, err := strconv.Atoi(index)
 		if err != nil || i >= len(record) {
 			continue
 		}
-
+		recordToTransform := record
 		for _, transformation := range fieldDef.Transformations {
-			record[i] = transformation.Apply(record, i)
+			recordToTransform[i] = transformation.Apply(recordToTransform, i)
+
 		}
+		newRecord[i] = recordToTransform[i]
 	}
+	return newRecord
 }
 
-func TransformAndValidateLine(record []string, structure StructureDefinition, lineNumber int, errorsMap map[int][]string, wg *sync.WaitGroup) {
+func TransformAndValidateLine(record []string, structure StructureDefinition, lineNumber int, errorsMap map[int][]string, wg *sync.WaitGroup) []string {
 	defer wg.Done() 
-	TransformRecord(record, structure)
-	ValidateLine(record, structure, lineNumber, errorsMap)
+	transformedRecord := TransformRecord(record, structure)
+	ValidateLine(transformedRecord, structure, lineNumber, errorsMap)
+	return transformedRecord
 }
