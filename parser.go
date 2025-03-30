@@ -128,7 +128,7 @@ func TransformRecord(record []string, structure StructureDefinition) {
 		}
 
 		for _, transformation := range fieldDef.Transformations {
-			record[i] = transformation.Apply(record[i])
+			record[i] = transformation.Apply(record, i)
 		}
 	}
 }

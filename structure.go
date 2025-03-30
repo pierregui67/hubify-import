@@ -77,6 +77,10 @@ func doUnmarshal(action string, data json.RawMessage) (TransformationAction, err
 		transformation = &AfterTransformation{}
 	case "substring":
 		transformation = &SubstringTransformation{}
+	case "concat":
+		transformation = &ConcatTransformation{}
+	case "addString":
+		transformation = &AddTransformation{}
 	default:
 		return nil, fmt.Errorf("unknown transformation: %s", action)
 	}
