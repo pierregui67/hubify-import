@@ -121,23 +121,30 @@ func printColumnErrors(errorsMap map[int][]string) string {
 
 func TransformRecord(record []string, structure StructureDefinition) []string {
 	newRecord := make([]string, len(record))
-	for index, fieldDef := range structure {
-		i, err := strconv.Atoi(index)
-		if err != nil || i >= len(record) {
+
+	for i := range record {
+
+		fieldDef, exists := structure[strconv.Itoa(i)]
+		if !exists {
+			newRecord[i] = record[i]
 			continue
 		}
+
 		recordToTransform := record
 		for _, transformation := range fieldDef.Transformations {
 			recordToTransform[i] = transformation.Apply(recordToTransform, i)
-
 		}
+
+		fmt.Println("Transformed index:", i)
 		newRecord[i] = recordToTransform[i]
 	}
+	
+	fmt.Println("Transformed record:", newRecord)
 	return newRecord
 }
 
 func TransformAndValidateLine(record []string, structure StructureDefinition, lineNumber int, errorsMap map[int][]string, wg *sync.WaitGroup) []string {
-	defer wg.Done() 
+	defer wg.Done()
 	transformedRecord := TransformRecord(record, structure)
 	ValidateLine(transformedRecord, structure, lineNumber, errorsMap)
 	return transformedRecord
