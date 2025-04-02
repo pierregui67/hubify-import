@@ -18,20 +18,27 @@ func DetectDelimiter(filePath string) (rune, error) {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	counts := map[rune]int{',': 0, ';': 0}
+	counts := map[rune]int{',': 0, ';': 0, '|': 0}
 
 	// Read first few lines to detect the most common delimiter
 	for i := 0; i < 5 && scanner.Scan(); i++ {
 		line := scanner.Text()
 		counts[','] += strings.Count(line, ",")
 		counts[';'] += strings.Count(line, ";")
+		counts['|'] += strings.Count(line, "|")
 	}
 
 	// Choose the most frequent delimiter
-	if counts[';'] > counts[','] {
-		return ';', nil
+	mostFrequent := ','
+	maxCount := counts[',']
+
+	for delimiter, count := range counts {
+		if count > maxCount {
+			mostFrequent = delimiter
+			maxCount = count
+		}
 	}
-	return ',', nil
+	return mostFrequent, nil
 }
 
 func ValidateLine(line []string, structure StructureDefinition, lineNumber int, errorsMap map[int][]string) {
@@ -134,12 +141,9 @@ func TransformRecord(record []string, structure StructureDefinition) []string {
 		for _, transformation := range fieldDef.Transformations {
 			recordToTransform[i] = transformation.Apply(recordToTransform, i)
 		}
-
-		fmt.Println("Transformed index:", i)
 		newRecord[i] = recordToTransform[i]
 	}
 	
-	fmt.Println("Transformed record:", newRecord)
 	return newRecord
 }
 
